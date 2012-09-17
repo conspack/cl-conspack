@@ -1,0 +1,223 @@
+CONSPACK
+--------
+
+Conspack supports the following basic types:
+
+    - Booleans, t or nil
+    - Numbers:
+        signed-byte {8,16,32,64,128}
+        unsigned-byte {8,16,32,64,128}
+        single-float
+        double-float
+        complex
+        rational
+    - Containers: 
+        Vector
+        List
+        Map (key-value pairs)
+        Typed map (key-value pairs with a type hint, e.g. class or struct)
+    - References (in-stream and remote)
+    - Conses
+    - Packages
+    - Symbols
+    - Indexes (i.e., externally-indexed symbols)
+
+Containers can either contain arbitrary objects, which include their
+header, or a fixed type, which stores only the post-header data
+per-object, potentially greatly reducing the size for some data.
+
+References, both forward and backward, properly allow for circularity
+and mutual references.
+
+Specification
+-------------
+
+Boolean:    #b0000000n; n = 0 or 1, nil or t
+
+Number:     #b0001nnnn; nnnn = type
+            bytes;      numeric value per type, for nnnn = #x0..#xB
+
+            or
+
+            #b00011100; Complex
+            Number;     Real-part
+            Number;     Imaginary-part
+
+            or
+
+            #b00011111; Rational
+            Number;     Numerator
+            Number;     Denominator
+
+            nnnn: #x0: (signed-byte 8)
+                  #x1: (signed-byte 16)
+                  #x2: (signed-byte 32)
+                  #x3: (signed-byte 64)
+                  #x4: (unsigned-byte 8)
+                  #x5: (unsigned-byte 16)
+                  #x6: (unsigned-byte 32)
+                  #x7: (unsigned-byte 64)
+                  #x8: single-float (4 bytes)
+                  #x9: double-float (8 bytes)
+                  #xA: (signed-byte 128)
+                  #xB: (unsigned-byte 128)
+                  #xC: complex
+                  #xD..#xE: reserved, count = 2
+                  #xF: rational
+
+            Future: long-double and bignum would probably be nice at
+            some point.
+      
+Container:  #b001xxfnn;       xx = type, f = static-type-flag, nn = size-bytes
+            size-bytes size;  number of elements in container, or
+                              number of key-value pairs in a map/tmap
+           [type byte;        when f=1, element-type for arrays, or
+                              key-type for maps]
+           [tmap-type obj;    for TMaps, a Ref or Symbol]
+            Obj * size[*2];   objects
+
+            xx:  #b00: Vector
+                 #b01: List
+                 #b10: Map
+                 #b11: TMap
+
+            f:    #b0: Arbitrary types (all objects have prefixes)
+                  #b1: Static types (one prefix, all objects uniform)
+
+            nn:  #b00: 8-bit size
+                 #b01: 16-bit size
+                 #b10: 32-bit size
+                 #b11: reserved
+
+            Note: In theory we could save a bit here by folding static
+            types into the nn=#b11 and having a separate byte specify
+            the size.
+
+            element-type: Only the following are valid:
+                - Number types
+                - Containers?
+                - Strings
+                - _Non-fixed_ Refs
+                - Conses
+                - Packages
+                - Symbols
+                - _Non-fixed_ Indexes
+
+            Note: Because the type-byte is only specified _once_,
+            certain types may be restricted; e.g., if a symbol is
+            specified with the keyword flag, then all elements are
+            keywords.  If it's specified _without_, then to include
+            keywords, a reference to the keyword package must be
+            included.
+
+            Also, since no header bytes are read, it is impossible to
+            tag or refer to objects in a static container (except map
+            _values_, which always have headers).
+
+            List Note: The last element in a list is the final CDR.
+            This means that lists normally need a final #x00 element.
+            This is necessary to support circular lists.  This also
+            means that "dotted lists" (e.g., '(1 2 . 3)) are
+            supported.
+
+            This also has implications for list length: for example, a
+            list which may appear to have 5 elements but shares a CDR
+            needs to have its header report a shorter length.  In
+            practice, this should be easy; length is O(n) anyway, and
+            you just need to walk the list and watch for any
+            previously-tagged conses while counting.
+
+            A 1-element list may be expressed as a cons; the result
+            should decode identically.
+
+            TMap note: The type value may be a reference, but it may
+            not be a forward reference.  Also, keywords are reserved
+            for use by conspack and related.
+            
+            Future: Static arrays with a type #x00 or #x01 should
+            probably be optimized to packed-bit vectors.
+
+String      #b010000nn;        nn = size-bytes
+            size-bytes bytes;  length of string in bytes
+            length bytes;      UTF-8 string
+
+            Note: To re-emphasize, length is the number of bytes, not
+            the number of characters.
+
+Ref:        #b011fdddd;          f = inline-flag, dddd = id or size-bytes
+           [size-bytes bytes;  if f=0, value of index]
+
+            f:    #b0: id follows
+                  #b1: id is lower nibble
+
+            dddd: #b00nn: size-bytes per container if f = 0
+
+                  otherwise, 4-bit reference ID.
+
+            Notes: References may be forward, which means the parser
+            needs to keep a list of places to fix up if necessary.
+            This shouldn't be overly difficult in most languages.
+
+            The encoder will also need to "notice" all objects being
+            encoded first, so they can be tagged as written (see
+            Tags).
+
+R-Ref:      #b01100100
+            Obj;
+
+            Remote reference.  This represents a placeholder that is
+            understood by the caller, and is meant to identify
+            something outside the scope of conspack.
+
+            The object is used as an identifier for the remote
+            reference, and is not otherwise understood by conspack.
+            Implementations should ideally allow the caller to process
+            the object into something useful immediately, so the
+            resulting structure need not be traversed a second time.
+
+Reserved:   #b01100101 .. #b01101111, count = 10
+
+Tag:        #b111fdddd;        f = inline-flag, dddd = id or size-bytes
+           [size-bytes bytes;  if f=0, value of index]
+
+            f:    #b0: id follows
+                  #b1: id is lower nibble
+
+            dddd: #b00nn: size-bytes per container if f = 0
+
+                  otherwise, 4-bit reference ID.
+
+            Note: Tags are written at any point before an object.
+            They may not be written where objects are shortened,
+            such as static containers.  The parser should track
+            the given ID as being associated with the following
+            object.  It is an error to assign the same tag twice.
+
+Cons:       #b10000000
+            Obj;        CAR of cons
+            Obj;        CDR of cons
+
+            Note: Any list may be expressed as a series of cons;
+            decoding should be identical.  This is likely inefficient,
+            however.
+
+Package:    #b10000001
+            Obj;        String or reference to package name
+
+            Note: Forward references are invalid here.
+
+Symbol:     #b1000001f; f = keyword flag
+            Obj;        String or ref which is symbol-name
+           [Obj;        Package or reference to package, if f = 0]
+
+            Note: Forward references are invalid here.
+
+Reserved    #b10000100 - #b10001111, count = 11
+            
+Index:      #b101fdddd;        f = inline-flag, dddd = id or size-bytes
+           [size-bytes bytes;  if f=0, value of index]
+
+            Indexes are essentially enumerations which can be mapped
+            to a symbol or keyword.
+
+Reserved    #b10100100 - #b10101111, count = 11
