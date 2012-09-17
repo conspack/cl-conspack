@@ -47,7 +47,7 @@ CONSPACK, on the other hand, attempts to be a more robust solution:
   and decoding can be many times faster than alternatives, even
   *while* tracking references (faster still without!).
 
-See [SPEC](https://github.com/conspack/cl-conspack/doc/SPEC) for
+See [SPEC](https://github.com/conspack/cl-conspack/blob/master/doc/SPEC) for
 complete details on encoding.
 
 ## Example
