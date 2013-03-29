@@ -212,7 +212,12 @@ Symbol:     #b1000001f; f = keyword flag
 
             Note: Forward references are invalid here.
 
-Reserved    #b10000100 - #b10001111, count = 11
+Character:  #b100001nn;            nn = byte-count (i.e., 1-4)
+            byte-count bytes;      the character value, UTF-8
+
+            Represent a character encoded in UTF-8.
+
+Reserved    #b10001000 - #b10001111, count = 7
             
 Index:      #b101fdddd;        f = inline-flag, dddd = id or size-bytes
            [size-bytes bytes;  if f=0, value of index]

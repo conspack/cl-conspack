@@ -178,6 +178,13 @@
                 (make-symbol symbol-name)))
           (make-symbol symbol-name)))))
 
+(defun decode-character (header buffer)
+  (let ((len (logand header #b11)))
+    (use-bytes len)
+    (let ((octets (make-octet-vector len)))
+      (fast-read-sequence octets buffer)
+      (aref (trivial-utf-8:utf-8-bytes-to-string octets) 0))))
+
 (defun decode-index (header buffer)
   (let* ((id (decode-ref-id header buffer))
          (sym (find-in-index id)))
@@ -199,11 +206,12 @@
       (:cons (decode-cons header buffer))
       (:package (decode-package header buffer))
       (:symbol (decode-symbol header buffer))
+      (:character (decode-character header buffer))
       (:index (decode-index header buffer)))))
 
 (defun decode-value-or-fref (buffer type ref datum &optional header)
   (let ((value (decode-value buffer header)))
-    (when (forward-ref-p value)      
+    (when (forward-ref-p value)
       (setf (forward-ref-type value) type)
       (setf (forward-ref-ref value) ref)
       (setf (forward-ref-datum value) datum))

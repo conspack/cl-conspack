@@ -144,6 +144,12 @@
   (unless (keywordp value)
     (encode-ref-or-value (symbol-package value) buffer)))
 
+(defun encode-character (value buffer &optional fixed-header)
+  (let ((bytes (trivial-utf-8:string-to-utf-8-bytes (string value))))
+    (encode-header (logior +character-header+ (length bytes))
+                   buffer fixed-header)
+    (fast-write-sequence bytes buffer)))
+
 (defun encode-index (value buffer &optional fixed-header)
   (if (and (not fixed-header) (typep value '(unsigned-byte 4)))
       (writeu8 (logior +index-header+ +reftag-inline+
@@ -170,6 +176,7 @@
        (if id
            (encode-index id buffer fixed-header)
            (encode-symbol value buffer fixed-header))))
+    (character (encode-character value buffer fixed-header))
     (r-ref (encode-r-ref (r-ref-value value) buffer fixed-header))
     (t (encode-tmap value buffer fixed-header))))
 

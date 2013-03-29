@@ -2,7 +2,7 @@
 
  ;; Constants
 
-(defconstant +boolean-header   #b00000000) ; #b0000000n
+(defconstant +boolean-header    #b00000000) ; #b0000000n
 (defconstant +number-header+   #b00010000) ; #b0001nnnn
 (defconstant +container-header #b00100000) ; #b001xxfnn
 (defconstant +string-header+   #b01000000) ; #b010000nn
@@ -12,6 +12,7 @@
 (defconstant +cons-header+     #b10000000) ; #b10000000
 (defconstant +package-header+  #b10000001) ; #b10000001
 (defconstant +symbol-header+   #b10000010) ; #b1000001f
+(defconstant +character-header+ #b10000100) ; #b100001nn
 (defconstant +index-header+    #b10100000) ; #b101fdddd
 
 (defconstant +int8+ #x0)
@@ -89,6 +90,9 @@
 
 (defun symbol-p (n)
   (= #b10000010 (logand n #b11111110)))
+
+(defun character-p (n)
+  (= +character-header+ (logand n #b11111100)))
 
 (defun keyword-p (n)
   (and (symbol-p n)
@@ -180,6 +184,10 @@
       (logior +symbol-header+ +symbol-keyword+)
       +symbol-header+))
 
+(defun character-header (c)
+  (logior +character-header+
+          (length (trivial-utf-8:string-to-utf-8-bytes (string c)))))
+
  ;; Decode
 
 (declaim (ftype header-decode-fun
@@ -197,6 +205,7 @@
     ((cons-p h) :cons)
     ((package-p h) :package)
     ((symbol-p h) :symbol)
+    ((character-p h) :character)
     ((index-p h) :index)
     (t (error 'invalid-header :value h :reason "unknown type"))))
 
