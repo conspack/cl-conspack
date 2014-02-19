@@ -63,7 +63,7 @@ up to `N` objects, or until end-of-file, if `N` is `nil`."
                   (push (car (explain-buffer buffer 1)) item))
                  (t (push (decode-value buffer header) item)))
                (push (nreverse item) output))
-             (incf i)
+             (unless (tag-p header) (incf i))
              (when (and n (>= i n)) (loop-finish)))
          (end-of-file () (push 'end-of-file output))
          (invalid-header ()

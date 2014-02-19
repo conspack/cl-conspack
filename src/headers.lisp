@@ -70,7 +70,7 @@
    (= #b01110000 (logand n #b11110000))))
 
 (defun remote-ref-p (n)
-  (= +r-ref-header+ (logand +r-ref-header+ n)))
+  (= +r-ref-header+ n))
 
 (defun tag-p (n)
   (or
