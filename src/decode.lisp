@@ -217,7 +217,7 @@
       (setf (forward-ref-datum value) datum))
     value))
 
-(defun decode (byte-vector)
-  (with-fast-input (buffer byte-vector)
-    (tracking-refs ()
-      (decode-value buffer))))
+(defun decode (byte-vector &optional (offset 0))
+  (with-fast-input (buffer byte-vector nil offset)
+    (values (tracking-refs () (decode-value buffer))
+            (+ offset (fast-io:buffer-position buffer)))))
