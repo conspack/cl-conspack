@@ -104,7 +104,8 @@
             finally (return (1+ count)))))
 
 (defun notice-recursively (object &optional (context *ref-context*))
-  (unless (trivial-p object)
+  (unless (or (trivial-p object)
+              (null *ref-context*))
     (if (noticed-p object context)
         (tag-object object context)
         (progn
@@ -118,9 +119,9 @@
                (loop for i across object do (notice-recursively i context))))
             (hash-table
              (loop for k being each hash-key in object
-                   using (hash-value v) do
-                     (notice-recursively k context)
-                     (notice-recursively v context))))))))
+                     using (hash-value v) do
+                       (notice-recursively k context)
+                       (notice-recursively v context))))))))
 
 (defun referrable-p (object)
   (or (typep object 'sequence)
