@@ -151,12 +151,25 @@
                    buffer fixed-header)
     (fast-write-sequence bytes buffer)))
 
+(defun encode-properties (value buffer)
+  (encode-header +properties-header+ buffer)
+  (encode-ref-or-value value buffer))
+
 (defun encode-index (value buffer &optional fixed-header)
   (if (and (not fixed-header) (typep value '(unsigned-byte 4)))
       (writeu8 (logior +index-header+ +reftag-inline+
                       (logand value #xF))
               buffer)
       (encode-header +index-header+ buffer fixed-header value)))
+
+(defun %properties-encode (value buffer)
+  ;; FIXME: This should all be in a separate function or method
+  (typecase value
+    (hash-table
+     (when (eq 'equal (hash-table-test value))
+       (setf (property value :test) :equal))))
+  (when-let ((p (properties value)))
+    (encode-properties p buffer)))
 
 (defun %encode (value buffer &optional fixed-header)
   (unless (or fixed-header
@@ -182,6 +195,7 @@
     (t (encode-tmap value buffer fixed-header))))
 
 (defun encode-ref-or-value (value buffer &optional fixed-header)
+  (%properties-encode value buffer)
   (if (and (tracking-refs-p)
            (or (not fixed-header) (ref-p fixed-header))
            (written-p value))

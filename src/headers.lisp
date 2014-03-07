@@ -2,18 +2,19 @@
 
  ;; Constants
 
-(defconstant +boolean-header    #b00000000) ; #b0000000n
-(defconstant +number-header+   #b00010000) ; #b0001nnnn
-(defconstant +container-header #b00100000) ; #b001xxfnn
-(defconstant +string-header+   #b01000000) ; #b010000nn
-(defconstant +ref-header+      #b01100000) ; #b011fdddd
-(defconstant +r-ref-header+    #b01100100) ; #b01100100
-(defconstant +tag-header+      #b11100000) ; #b111fdddd
-(defconstant +cons-header+     #b10000000) ; #b10000000
-(defconstant +package-header+  #b10000001) ; #b10000001
-(defconstant +symbol-header+   #b10000010) ; #b1000001f
-(defconstant +character-header+ #b10000100) ; #b100001nn
-(defconstant +index-header+    #b10100000) ; #b101fdddd
+(defconstant +boolean-header       #b00000000) ; #b0000000n
+(defconstant +number-header+       #b00010000) ; #b0001nnnn
+(defconstant +container-header     #b00100000) ; #b001xxfnn
+(defconstant +string-header+       #b01000000) ; #b010000nn
+(defconstant +ref-header+          #b01100000) ; #b011fdddd
+(defconstant +r-ref-header+        #b01100100) ; #b01100100
+(defconstant +tag-header+          #b11100000) ; #b111fdddd
+(defconstant +cons-header+         #b10000000) ; #b10000000
+(defconstant +package-header+      #b10000001) ; #b10000001
+(defconstant +symbol-header+       #b10000010) ; #b1000001f
+(defconstant +character-header+    #b10000100) ; #b100001nn
+(defconstant +properties-header+   #b10001000) ; #b10001000
+(defconstant +index-header+        #b10100000) ; #b101fdddd
 
 (defconstant +int8+ #x0)
 (defconstant +int16+ #x1)
@@ -93,6 +94,9 @@
 
 (defun character-p (n)
   (= +character-header+ (logand n #b11111100)))
+
+(defun properties-p (n)
+  (= +properties-header+ n))
 
 (defun keyword-p (n)
   (and (symbol-p n)
@@ -206,6 +210,7 @@
     ((package-p h) :package)
     ((symbol-p h) :symbol)
     ((character-p h) :character)
+    ((properties-p h) :properties)
     ((index-p h) :index)
     (t (error 'invalid-header :value h :reason "unknown type"))))
 

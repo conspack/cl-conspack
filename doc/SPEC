@@ -11,7 +11,7 @@ Conspack supports the following basic types:
         double-float
         complex
         rational
-    - Containers: 
+    - Containers:
         Vector
         List
         Map (key-value pairs)
@@ -67,7 +67,7 @@ Number:     #b0001nnnn; nnnn = type
 
             Future: long-double and bignum would probably be nice at
             some point.
-      
+
 Container:  #b001xxfnn;       xx = type, f = static-type-flag, nn = size-bytes
             size-bytes size;  number of elements in container, or
                               number of key-value pairs in a map/tmap
@@ -130,10 +130,15 @@ Container:  #b001xxfnn;       xx = type, f = static-type-flag, nn = size-bytes
             A 1-element list may be expressed as a cons; the result
             should decode identically.
 
+            Map note: Maps define the :TEST property (see Properties
+            below), which may be one of :EQL or :EQUAL as per Common
+            Lisp.  :EQ and :EQUALP are not necessarily supported.
+            Also as per CL, :EQL is the default if unspecified.
+
             TMap note: The type value may be a reference, but it may
             not be a forward reference.  Also, keywords are reserved
             for use by conspack and related.
-            
+
             Future: Static arrays with a type #x00 or #x01 should
             probably be optimized to packed-bit vectors.
 
@@ -217,8 +222,49 @@ Character:  #b100001nn;            nn = byte-count (i.e., 1-4)
 
             Represent a character encoded in UTF-8.
 
-Reserved    #b10001000 - #b10001111, count = 7
-            
+Properties: #b10001000
+            Obj;           An object specifying properties
+            Obj;           The object for which these properties apply
+
+            The first object shall be a list object in the form of a
+            PLIST.  This may specify arbitrary properties for the next
+            object.  Certain conspack types may have specific reserved
+            properties; other non-reserved properties are not an
+            error.
+
+            Implementations should read and automatically associate
+            the properties with the next object, or provide it in
+            context.  That is, properties should be available on
+            demand, rather than as a separate object.
+
+            Not all objects may support property association.
+            Numbers, characters, and other types for which a
+            language lacks "individual identity" may not support
+            properties.  However, this does not mean decoders can
+            ignore predefined properties.
+
+            Implementations MUST count the properties object against
+            any byte-count memory restriction.  These properties may
+            remain indefinitely loaded.
+
+            In fixed-type containers, it is not possible to specify
+            properties for elements.  The property header is not a
+            valid type for fixed-type containers.  For non-fixed
+            containers, properties may be specified for individual
+            elements.
+
+            Notes: A tag before the Properties object tags the
+            *properties*.  To tag the object to which the properties
+            apply, the tag must be placed after the PLIST and before
+            the next object.  It is also valid to place a tag between
+            the Properties header and the PLIST object, which shall be
+            identical to a tag before the Properties object.
+
+            Forward references to PLIST are invalid.
+
+
+Reserved    #b10001001 - #b10001111, count = 6
+
 Index:      #b101fdddd;        f = inline-flag, dddd = id or size-bytes
            [size-bytes bytes;  if f=0, value of index]
 

@@ -4,7 +4,7 @@
   :license "NewBSD"
 
   :depends-on (:closer-mop :alexandria :ieee-floats :trivial-utf-8
-               :fast-io)
+               :fast-io :trivial-garbage)
 
   :pathname "src"
   :serial t

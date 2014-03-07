@@ -1,5 +1,9 @@
 (in-package :conspack)
 
+ ;; Decode Properties
+
+(defvar *current-properties* nil)
+
  ;; Reading
 
 (defun decode-boolean (header)
@@ -80,7 +84,8 @@
   (let ((len (or len (decode-size (size-bytes header) buffer)))
         (fixed-header (when (container-fixed-p header)
                         (fast-read-byte buffer)))
-        (hash (make-hash-table)))
+        (hash (make-hash-table :test (if (eq :equal (getf *current-properties* :test))
+                                         'equal 'eql))))
     (container-precheck-bytes (* 2 len) fixed-header)
     (loop for i from 0 below len do
       (let* ((key (decode-value-or-fref buffer :map-key hash fixed-header))
@@ -193,6 +198,16 @@
     (use-bytes +platform-bytes+)
     sym))
 
+(defun decode-properties (header buffer)
+  (declare (ignore header))
+  (let* ((*current-properties* (decode-value buffer))
+         (next-object (decode-value buffer)))
+    (unless (or (characterp next-object)
+                (numberp next-object))
+      (setf (gethash next-object *properties*)
+            *current-properties*))
+    next-object))
+
 (defun decode-value (buffer &optional header)
   (let ((header (or header (fast-read-byte buffer))))
     (ecase (decode-header header)
@@ -207,6 +222,7 @@
       (:package (decode-package header buffer))
       (:symbol (decode-symbol header buffer))
       (:character (decode-character header buffer))
+      (:properties (decode-properties header buffer))
       (:index (decode-index header buffer)))))
 
 (defun decode-value-or-fref (buffer type ref datum &optional header)

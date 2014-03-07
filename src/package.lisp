@@ -14,6 +14,9 @@
            #:make-index #:define-index #:delete-index
            #:find-in-index
 
+           #:property #:properties #:remove-property
+           #:remove-properties
+
            #:encode-object #:decode-object
 
            #:decode-value #:decode
