@@ -19,7 +19,7 @@
 
            #:encode-object #:decode-object
 
-           #:decode-value #:decode
+           #:decode-value #:decode #:decode-stream #:decode-file
 
            #:explain
 

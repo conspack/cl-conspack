@@ -237,3 +237,19 @@
   (with-fast-input (buffer byte-vector nil offset)
     (values (tracking-refs () (decode-value buffer))
             (+ offset (fast-io:buffer-position buffer)))))
+
+(defun decode-stream (stream &optional (offset 0))
+  (with-fast-input (buffer nil stream offset)
+    (values (tracking-refs () (decode-value buffer))
+            (+ offset (fast-io:buffer-position buffer)))))
+
+(defun decode-file (path)
+  (with-open-file (stream path :element-type '(unsigned-byte 8))
+    (let (eof)
+      (tracking-refs ()
+        (loop as object = (handler-case
+                              (decode-stream stream)
+                            (end-of-file () (setf eof t) (values)))
+              until eof
+              collect object)))))
+

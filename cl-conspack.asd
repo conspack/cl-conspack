@@ -12,6 +12,7 @@
   :components
   ((:file "package")
    (:file "types")
+   (:file "properties")
    (:file "secure")
    (:file "reftable")
    (:file "r-ref")
