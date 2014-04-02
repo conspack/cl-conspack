@@ -167,6 +167,8 @@
                                      :reason "Package does not exist."))
       package)))
 
+(defvar *intern-symbols* nil)
+
 (defun decode-symbol (header buffer)
   (let ((symbol-name (decode-value buffer)))
     (use-bytes +platform-bytes+)
@@ -176,12 +178,17 @@
                        (find-package :keyword)
                        (decode-value buffer))))
       (if package
-          (multiple-value-bind (symbol status)
-              (find-symbol symbol-name package)
-            (if status
-                symbol
-                (make-symbol symbol-name)))
+          (if *intern-symbols*
+              (intern symbol-name package)
+              (multiple-value-bind (symbol status)
+                  (find-symbol symbol-name package)
+                (if status
+                    symbol
+                    (make-symbol symbol-name))))
           (make-symbol symbol-name)))))
+
+(defmacro with-interning (nil &body body)
+  `(let ((*intern-symbols* t)) ,@body))
 
 (defun decode-character (header buffer)
   (let ((len (logand header #b11)))
