@@ -14,6 +14,8 @@
            #:make-index #:define-index #:delete-index
            #:find-in-index
 
+           #:pointer #:pointer-value
+
            #:property #:properties #:remove-property
            #:remove-properties
 

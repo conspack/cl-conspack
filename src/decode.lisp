@@ -142,6 +142,10 @@
   (let ((object (decode-value buffer)))
     (funcall *remote-ref-fun* object)))
 
+(defun decode-pointer (header buffer &optional len)
+  (let ((len (or len (size-bytes header))))
+    (pointer (decode-size len buffer))))
+
 (defun decode-tag (header buffer)
   (let* ((id (decode-ref-id header buffer))
          (object (decode-value buffer)))
@@ -225,6 +229,7 @@
       (:tag (decode-tag header buffer))
       (:ref (decode-ref header buffer))
       (:r-ref (decode-r-ref header buffer))
+      (:pointer (decode-pointer header buffer))
       (:cons (decode-cons header buffer))
       (:package (decode-package header buffer))
       (:symbol (decode-symbol header buffer))

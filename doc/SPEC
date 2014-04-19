@@ -180,7 +180,17 @@ R-Ref:      #b01100100
             the object into something useful immediately, so the
             resulting structure need not be traversed a second time.
 
-Reserved:   #b01100101 .. #b01101111, count = 10
+Reserved:   #b01100101 .. #b01100111, count = 3
+
+Pointer:    #b011010nn         nn = size-bytes
+            size-bytes PTR;
+
+            Pointer value; this is more-or-less intended for
+            implementing object skipping and offsets.  However, there
+            is no predefined interpretation, other than to distinguish
+            it from an integer.
+
+Reserved:   #b01101100 .. #b01101111, count = 4
 
 Tag:        #b111fdddd;        f = inline-flag, dddd = id or size-bytes
            [size-bytes bytes;  if f=0, value of index]

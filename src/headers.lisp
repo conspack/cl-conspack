@@ -8,6 +8,7 @@
 (defconstant +string-header+       #b01000000) ; #b010000nn
 (defconstant +ref-header+          #b01100000) ; #b011fdddd
 (defconstant +r-ref-header+        #b01100100) ; #b01100100
+(defconstant +pointer-header+      #b01101000) ; #b011010nn
 (defconstant +tag-header+          #b11100000) ; #b111fdddd
 (defconstant +cons-header+         #b10000000) ; #b10000000
 (defconstant +package-header+      #b10000001) ; #b10000001
@@ -72,6 +73,9 @@
 
 (defun remote-ref-p (n)
   (= +r-ref-header+ n))
+
+(defun pointer-header-p (n)
+  (= +pointer-header+ (logand n #b111111100)))
 
 (defun tag-p (n)
   (or
@@ -205,6 +209,7 @@
     ((string-p h) :string)
     ((ref-p h) :ref)
     ((remote-ref-p h) :r-ref)
+    ((pointer-header-p h) :pointer)
     ((tag-p h) :tag)
     ((cons-p h) :cons)
     ((package-p h) :package)

@@ -1,5 +1,17 @@
 (in-package :conspack)
 
+ ;; Utility
+
+(defstruct pointer
+  (value 0))
+
+(defun pointer (value)
+  (make-pointer :value value))
+
+(defmethod print-object ((o pointer) s)
+  (print-unreadable-object (o s :type t)
+    (format s "#x~8,'0X" (pointer-value o))))
+
  ;; Encoding
 
 (defun encode-header (header-byte buffer &optional fixed-header
@@ -123,6 +135,10 @@
   (encode-header +r-ref-header+ buffer fixed-header)
   (%encode value buffer))
 
+(defun encode-pointer (value buffer &optional fixed-header)
+  (encode-header +pointer-header+ buffer fixed-header
+                 (pointer-value value)))
+
 (defun encode-tag (value buffer &optional fixed-header)
   (if (and (not fixed-header) (typep value '(unsigned-byte 4)))
       (writeu8 (logior +tag-header+ +reftag-inline+
@@ -192,6 +208,7 @@
            (encode-symbol value buffer fixed-header))))
     (character (encode-character value buffer fixed-header))
     (r-ref (encode-r-ref (r-ref-value value) buffer fixed-header))
+    (pointer (encode-pointer value buffer fixed-header))
     (t (encode-tmap value buffer fixed-header))))
 
 (defun encode-ref-or-value (value buffer &optional fixed-header)
