@@ -3,14 +3,15 @@
  ;; Utility
 
 (defstruct pointer
-  (value 0))
+  (value 0)
+  (bit-width nil))
 
-(defun pointer (value)
-  (make-pointer :value value))
+(defun pointer (value &optional bit-width)
+  (make-pointer :value value :bit-width bit-width))
 
 (defmethod print-object ((o pointer) s)
   (print-unreadable-object (o s :type t)
-    (format s "#x~8,'0X" (pointer-value o))))
+    (format s "#x~8,'0X:~D" (pointer-value o) (pointer-bit-width o))))
 
  ;; Encoding
 
@@ -137,7 +138,9 @@
 
 (defun encode-pointer (value buffer &optional fixed-header)
   (encode-header +pointer-header+ buffer fixed-header
-                 (pointer-value value)))
+                 (pointer-value value)
+                 (when-let (width (pointer-bit-width value))
+                   (bits-size-type width))))
 
 (defun encode-tag (value buffer &optional fixed-header)
   (if (and (not fixed-header) (typep value '(unsigned-byte 4)))

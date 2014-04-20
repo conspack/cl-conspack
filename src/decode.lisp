@@ -144,7 +144,8 @@
 
 (defun decode-pointer (header buffer &optional len)
   (let ((len (or len (size-bytes header))))
-    (pointer (decode-size len buffer))))
+    (use-bytes +platform-bytes+ 2)
+    (pointer (decode-size len buffer) (* 8 len))))
 
 (defun decode-tag (header buffer)
   (let* ((id (decode-ref-id header buffer))
