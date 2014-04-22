@@ -65,6 +65,8 @@ Number:     #b0001nnnn; nnnn = type
                   #xD..#xE: reserved, count = 2
                   #xF: rational
 
+            These are all stored in big-endian (network) format.
+
             Future: long-double and bignum would probably be nice at
             some point.
 
