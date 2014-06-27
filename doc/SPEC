@@ -275,7 +275,7 @@ Properties: #b10001000
             Forward references to PLIST are invalid.
 
 
-Reserved    #b10001001 - #b10001111, count = 6
+Reserved    #b10001001 - #b10001111, count = 7
 
 Index:      #b101fdddd;        f = inline-flag, dddd = id or size-bytes
            [size-bytes bytes;  if f=0, value of index]
@@ -283,4 +283,4 @@ Index:      #b101fdddd;        f = inline-flag, dddd = id or size-bytes
             Indexes are essentially enumerations which can be mapped
             to a symbol or keyword.
 
-Reserved    #b10100100 - #b10101111, count = 11
+Reserved    #b10100100 - #b10101111, count = 12
