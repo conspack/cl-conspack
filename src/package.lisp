@@ -28,5 +28,7 @@
            #:*conspack-interning* #:*conspack-max-bytes*
            #:*conspack-forward-refs*
 
+           #:*current-properties*
+
            #:with-interning
            #:with-conspack-security))

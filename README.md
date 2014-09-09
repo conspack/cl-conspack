@@ -50,7 +50,7 @@ CONSPACK, on the other hand, attempts to be a more robust solution:
 See [SPEC](https://github.com/conspack/cl-conspack/blob/master/doc/SPEC) for
 complete details on encoding.
 
-## Example
+## Usage
 
 `cl-conspack` is simple to use:
 
@@ -62,4 +62,113 @@ complete details on encoding.
 ;; Smaller if the element-type is known:
 (encode (fast-io:octets-from '(1 2 3)))
   ;; => #(36 3 20 1 2 3)
+```
+
+### Circularity and References
+
+Circularity tracking is not on by default, you can enable it for a
+particular `encode` or `decode` by using `tracking-refs`:
+
+```lisp
+(tracking-refs ()
+  (decode (encode CIRCULAR-OBJECT)))
+```
+
+"Remote" references are application-level references.  You may encode
+a reference using an arbitrary object as a descriptor:
+
+```lisp
+(encode (r-ref '((:url . "http://..."))))
+```
+
+When decoding, you may provide a function to handle these:
+
+```lisp
+(with-remote-refs (lambda (x) (decode-url x))
+  (decode OBJECT))
+```
+
+### Properties
+
+Properties are a way to specify additional information about an object
+that may be useful at decode-time.  For instance, while hash tables
+are supported as maps, there are no bits to specify the `:test`
+parameter, so decoding a hash table of strings would produce a useless
+object.  In this case, the `:test` property is set when encoding and
+checked when decoding hash tables.
+
+You may specify arbitrary properties for arbitrary objects; the only
+restriction is the objects must test by `EQ`.
+
+```lisp
+(let ((object (make-instance ...)))
+  (setf (property object :foo) 'bar)
+  (property object :foo)) ;; => BAR
+```
+
+This sets the `:foo` property to the symbol `bar`, and it is encoded
+along with the object.  Note this will increase the object size, by
+the amount required to store a map of symbols-to-values.
+
+When decoding, you can access properties about an object via
+`*current-properties*`:
+
+```lisp
+(defmethod decode-object (...)
+  (let ((prop (getf *current-properties* NAME)))
+    ...))
+```
+
+They are also available afterwards with `property`, and you may remove
+them with `remove-property` or `remove-properties`.
+
+### Allocation Limits and Security
+
+Conspack provides some level of "security" by *approximately* limiting
+the amount of bytes allocated when reading objects.
+
+By default, because format sizes are prespecified statically, it's
+possible to specify extremely large allocations for e.g. arrays with
+only a few bytes.  Obviously, this is not suitable for untrusted
+conspack data.
+
+The solution is simply to cap allocations:
+
+```lisp
+(with-conspack-security (:max-bytes 200000)
+  (decode ...))
+```
+
+Since actual allocation sizes are rather difficult to get in most
+lisps, this *approximates* the allocation based on how big each object
+might be, e.g.:
+
+* `pointer-size * array-size`
+* `string-length`
+* `number-size`
+* etc.
+
+Each object header is tallied against the limit just prior to its
+decoding; if the object would exceed the allowed bytes, decoding halts
+with an error.
+
+Further options may be added in the future.
+
+## Explaining
+
+Since conspack is a binary format, it's rather difficult for humans to
+read just looking at the stream of bytes.  Thus an `EXPLAIN` feature
+is provided.  This is mostly useful for debugging the format; however
+it may be of interest otherwise and certainly may be helpful when
+creating other implementations.
+
+For instance:
+
+```lisp
+(explain (encode '(1 2 3)))
+
+;; =>
+((:LIST 4
+  ((:NUMBER :INT8 1) (:NUMBER :INT8 2) (:NUMBER :INT8 3) (:BOOLEAN NIL)))
+ END-OF-FILE)
 ```
