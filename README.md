@@ -67,7 +67,7 @@ complete details on encoding.
 ### Circularity and References
 
 Circularity tracking is not on by default, you can enable it for a
-particular `encode` or `decode` by using `tracking-refs`:
+particular block of `encode`s or `decode`s by using `tracking-refs`:
 
 ```lisp
 (tracking-refs ()
@@ -87,6 +87,72 @@ When decoding, you may provide a function to handle these:
 (with-remote-refs (lambda (x) (decode-url x))
   (decode OBJECT))
 ```
+
+### Indexes
+
+If you have a relatively small static set of symbols you will always
+use for a particular encoding/decoding, you may want to use
+*indexes*.  These allow symbols to be very-tightly-packed: for up to
+15 symbols, a single byte can encode the symbol!  For up to 256, two
+bytes, and so on.
+
+Trivially:
+
+```lisp
+(cpk:with-index (specifier-1 specifier-2 specifier-3)
+  (cpk:encode '(specifier-1 specifier-2 specifier-3)))
+
+;; => #(40 4 176 177 178 0)
+
+;; Contrast this with:
+
+(cpk:encode '(specifier-1 specifier-2 specifier-3))
+;; #(40 4 130 64 11 83 80 69 67 73 70 73 69 82 45 49 129 64 16 67 79
+;; 77 77 79 78 45 76 73 83 80 45 85 83 69 82 130 64 11 83 80 69 67 73
+;; 70 73 69 82 45 50 129 64 16 67 79 77 77 79 78 45 76 73 83 80 45 85
+;; 83 69 82 130 64 11 83 80 69 67 73 70 73 69 82 45 51 129 64 16 67 79
+;; 77 77 79 78 45 76 73 83 80 45 85 83 69 82 0)
+```
+
+(This is a somewhat excessive example, since long non-keyword symbols
+are used.  Shorter keyword symbols would be relatively shorter, but
+this is the general case.)
+
+For more "realistic" use, you may *define* an index and refer to it:
+
+```lisp
+(define-index index-name
+  symbol-1 symbol-2 ...)
+
+(with-named-index 'index-name
+  (encode ...))
+```
+
+For instance, you may define multiple indexes for multiple different
+format versions, read the version, and use the appropriate index:
+
+```lisp
+(define-index 'version-1 ...)
+(define-index 'version-2 ...)
+
+(let ((version (decode-stream s)))
+  (with-named-index version
+    ;; Decode the rest of the stream appropriately.  You may want to
+    ;; do more checking on VERSION if security is required...
+    (decode-stream s)))
+```
+
+Note that using `tracking-refs` will *also* help encode symbols
+efficiently, but not *quite* as efficiently:
+
+* The full string for the symbol (and if necessary, package), will be
+  encoded at least once, when first encountered
+* Refs are tracked in-order, and may lead to longer tags than a
+  comparable index would use
+
+However, `tracking-refs` is a perfectly suitable option, especially if
+flexibility is desired, since all symbol information is encoded, and
+nothing special is needed for decoding.
 
 ### Properties
 
