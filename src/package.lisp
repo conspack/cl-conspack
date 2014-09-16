@@ -20,6 +20,8 @@
            #:remove-properties
 
            #:encode-object #:decode-object
+           #:slots-to-alist #:alist-to-slots
+           #:defencoding
 
            #:decode-value #:decode #:decode-stream #:decode-file
 

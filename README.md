@@ -64,6 +64,47 @@ complete details on encoding.
   ;; => #(36 3 20 1 2 3)
 ```
 
+### CLOS and general objects
+
+Conspack provides the ability to serialize and deserialize objects of
+any kind.
+
+The easiest way, for the common case:
+
+```lisp
+(conspack:defencoding my-class
+  slot-1 slot-2 slot-3)
+```
+
+This expands to the more flexible way, which specializes
+`ENCODE-OBJECT` and `DECODE-OBJECT`:
+
+```lisp
+(defmethod conspack:encode-object ((object my-class) &key &allow-other-keys)
+  (conspack:slots-to-alist (object)
+    slot-1 slot-2 slot-3 ...))
+
+(defmethod conspack:decode-object ((class (eql 'my-class)) alist
+                                   &key &allow-other-keys)
+  (alist-to-slots (alist :class my-class)
+    slot-1 slot-2 slot-3))
+```
+
+`ENCODE-OBJECT` should specialize on the object and return an alist.
+The alist returned will be checked for circularity of `tracking-refs`
+is in use.
+
+`DECODE-OBJECT` should specialize on `(eql 'class-name)`, and produce
+an object *based* on the alist.
+
+As you can see, this does not require objects be in any particular
+format, or that you store any particular slots or values.  It does not
+specify how you restore an object.
+
+But for the "normal" case, `SLOTS-TO-ALIST` and `ALIST-TO-SLOTS` are
+provided to build and restore from alists, and `DEFENCODING` can
+define all of this in one simple form.
+
 ### Circularity and References
 
 Circularity tracking is not on by default, you can enable it for a

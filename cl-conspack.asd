@@ -1,3 +1,8 @@
+(defpackage :cl-conspack.asdf
+  (:use #:cl #:asdf))
+
+(in-package :cl-conspack.asdf)
+
 (defsystem :cl-conspack
   :description "CONSPACK implementation for Common Lisp"
   :author "Ryan Pavlik"
@@ -11,6 +16,7 @@
 
   :components
   ((:file "package")
+   (:file "util")
    (:file "types")
    (:file "properties")
    (:file "secure")
