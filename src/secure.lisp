@@ -2,6 +2,7 @@
 
  ;; External
 
+(defvar *conspack-security* nil)
 (defvar *conspack-max-bytes* nil)
 (defvar *conspack-forward-refs* t)
 
@@ -23,7 +24,8 @@
 
 (defmacro with-conspack-security ((&key (max-bytes nil) (forward-refs t))
                                   &body body)
-  `(let ((*conspack-max-bytes* ,max-bytes)
+  `(let ((*conspack-security* t)
+         (*conspack-max-bytes* ,max-bytes)
          (*conspack-forward-refs* ,forward-refs)
          (*bytes-alloc* (or *bytes-alloc* 0)))
      ,@body))
