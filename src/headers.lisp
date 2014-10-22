@@ -2,7 +2,7 @@
 
  ;; Constants
 
-(defconstant +boolean-header       #b00000000) ; #b0000000n
+(defconstant +boolean-header+      #b00000000) ; #b0000000n
 (defconstant +number-header+       #b00010000) ; #b0001nnnn
 (defconstant +container-header     #b00100000) ; #b001xxfnn
 (defconstant +string-header+       #b01000000) ; #b010000nn
@@ -141,6 +141,25 @@
     (double-float        :double-float)
     (complex             :complex)
     (ratio               :rational)))
+
+(defun number-type-to-lisp (type)
+  "Find the lisp type (e.g., SINGLE-FLOAT) for a specified number
+type (e.g., :SINGLE-FLOAT).  The inverse of NUMBER-TYPE."
+  (case type
+    (:int8           '(signed-byte 8))
+    (:uint8          '(unsigned-byte 8))
+    (:int16          '(signed-byte 16))
+    (:uint16         '(unsigned-byte 16))
+    (:int32          '(signed-byte 32))
+    (:uint32         '(unsigned-byte 32))
+    (:int64          '(signed-byte 64))
+    (:uint64         '(unsigned-byte 64))
+    (:int128         '(signed-byte 128))
+    (:uint128        '(unsigned-byte 128))
+    (:single-float   'single-float)
+    (:double-float   'double-float)
+    (:complex        'complex)
+    (:rational       'ratio)))
 
 (defun number-header (type)
   (when type
