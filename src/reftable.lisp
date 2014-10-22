@@ -11,7 +11,8 @@
   (id-to-obj (make-hash-table))
   (forward-refs (make-hash-table))
   (noticed-objects (make-hash-table))
-  (written-objects (make-hash-table)))
+  (written-objects (make-hash-table))
+  (encoded-objects (make-hash-table)))
 
 (defstruct forward-ref
   (type nil :type symbol)
@@ -82,7 +83,8 @@
   (setf (gethash object (ref-context-written-objects context)) t))
 
 (defun trivial-p (object)
-  (or (typep object 'number)
+  (or (typep object 'character)
+      (typep object 'number)
       (typep object 'boolean)))
 
 (defun noticed-p (object &optional (context *ref-context*))
@@ -121,7 +123,12 @@
              (loop for k being each hash-key in object
                      using (hash-value v) do
                        (notice-recursively k context)
-                       (notice-recursively v context))))))))
+                       (notice-recursively v context)))
+            ((or string package symbol r-ref pointer))
+            (t (let ((encoded-alist (encode-object object)))
+                 (notice-recursively encoded-alist)
+                 (setf (gethash object (ref-context-encoded-objects context))
+                       encoded-alist))))))))
 
 (defun referrable-p (object)
   (or (typep object 'sequence)

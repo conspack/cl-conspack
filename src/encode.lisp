@@ -110,9 +110,10 @@
     (encode-ref-or-value v buffer)))
 
 (defun encode-tmap (value buffer &optional fixed-header)
-  (let* ((encoded-alist (encode-object value))
+  (let* ((encoded-alist (if *ref-context*
+                            (gethash value (ref-context-encoded-objects *ref-context*))
+                            (encode-object value)))
          (len (length encoded-alist)))
-    (notice-recursively encoded-alist)
     (encode-header (container-header :tmap nil) buffer fixed-header len)
     (encode-ref-or-value (class-name (class-of value)) buffer)
     (loop for i in encoded-alist do
