@@ -73,8 +73,10 @@
   (let* ((len (or len (decode-size (size-bytes header) buffer)))
          (fixed-header (when (container-fixed-p header)
                          (fast-read-byte buffer)))
-         (fixed-type (number-type-to-lisp
-                      (decode-number-header fixed-header))))
+         (fixed-type
+           (when fixed-header
+             (number-type-to-lisp
+              (decode-number-header fixed-header)))))
     (container-precheck-bytes len fixed-header)
     (let ((v (make-array len :element-type (or fixed-type t))))
       (loop for i below len do
