@@ -46,7 +46,7 @@ You may not use both `:INSTANCE` and `:CLASS`."
 (defmacro defencoding (class-name &body slot-names)
   "Trivially define `ENCODE-OBJECT` and `DECODE-OBJECT` to store and
 load the given slots."
-  `(eval-when (:compile-toplevel :load-toplevel :execute)
+  `(eval-when (:load-toplevel :execute)
      (defmethod encode-object ((object ,class-name) &key &allow-other-keys)
        (slots-to-alist (object) ,@slot-names))
      (defmethod decode-object ((class (eql ',class-name)) alist
