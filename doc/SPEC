@@ -129,8 +129,13 @@ Container:  #b001xxfnn;       xx = type, f = static-type-flag, nn = size-bytes
             you just need to walk the list and watch for any
             previously-tagged conses while counting.
 
-            A 1-element list may be expressed as a cons; the result
-            should decode identically.
+            A list must has a minimum length of 2!  The final element
+            of a normal one-element list should be NIL.  A 1-element
+            list may be expressed as a cons with a NIL CDR; the result
+            should decode identically, and is one byte shorter.
+
+            A 0-element list is not expressed as '(NIL . NIL), but
+            just NIL.  It should be encoded as NIL, i.e., #x00.
 
             Map note: Maps define the :TEST property (see Properties
             below), which may be one of :EQL or :EQUAL as per Common
@@ -234,13 +239,13 @@ Character:  #b100001nn;            nn = byte-count (i.e., 1-4)
 
             Represent a character encoded in UTF-8.
 
-Properties: #b10001000
-            Obj;           An object specifying properties
+Properties: #b10001000 list; A list object specifying properties
             Obj;           The object for which these properties apply
 
-            The first object shall be a list object in the form of a
-            PLIST.  This may specify arbitrary properties for the next
-            object.  Certain conspack types may have specific reserved
+            The first object shall be a list object or backward
+            reference to a list object in the form of a PLIST.  This
+            may specify arbitrary properties for the next object.
+            Certain conspack types may have specific reserved
             properties; other non-reserved properties are not an
             error.
 
@@ -269,10 +274,11 @@ Properties: #b10001000
             *properties*.  To tag the object to which the properties
             apply, the tag must be placed after the PLIST and before
             the next object.  It is also valid to place a tag between
-            the Properties header and the PLIST object, which shall be
-            identical to a tag before the Properties object.
+            the Properties header and the PLIST object; this tags the
+            *list object* rather than the Properties.
 
-            Forward references to PLIST are invalid.
+            Forward references to PLIST, or the list object, are
+            invalid.
 
 
 Reserved    #b10001001 - #b10001111, count = 7

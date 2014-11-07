@@ -57,6 +57,8 @@
         (fixed-header (when (container-fixed-p header)
                         (fast-read-byte buffer))))
     (container-precheck-bytes len fixed-header)
+    (when (< len 2)
+      (error 'invalid-size :value len :reason "Length of LIST must be >= 2" ))
     (loop with first = (cons nil nil)
           for i from 0 below (1- len)
           as cons = first then (setf (cdr cons) (cons nil nil))

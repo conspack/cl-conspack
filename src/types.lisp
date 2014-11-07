@@ -18,6 +18,7 @@
                        value reason)))))
 
 (define-condition invalid-header (conspack-error) ())
+(define-condition invalid-size (conspack-error) ())
 
 (define-condition duplicate-id (conspack-error)
   ((existing-value :initarg :existing-value :reader duplicate-ref-existing-value)
