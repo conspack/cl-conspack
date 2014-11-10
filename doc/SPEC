@@ -170,6 +170,13 @@ Ref:        #b011fdddd;          f = inline-flag, dddd = id or size-bytes
             needs to keep a list of places to fix up if necessary.
             This shouldn't be overly difficult in most languages.
 
+            As a restriction, objects should be encoded normally the
+            first time they are encountered, and forward references
+            should only occur when they refer to the object currently
+            being encoded.  This basically restricts forward
+            references to elements in a container which refer to the
+            container.
+
             The encoder will also need to "notice" all objects being
             encoded first, so they can be tagged as written (see
             Tags).
