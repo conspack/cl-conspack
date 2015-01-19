@@ -224,9 +224,10 @@
       (%encode value buffer fixed-header)))
 
 (defun encode-to-buffer (value fast-io-buffer)
-  (when (tracking-refs-p)
-    (notice-recursively value))
-  (encode-ref-or-value value fast-io-buffer))
+  (with-properties ()
+    (when (tracking-refs-p)
+      (notice-recursively value))
+    (encode-ref-or-value value fast-io-buffer)))
 
 (defun encode (value &key stream)
   (with-fast-output (buffer stream)

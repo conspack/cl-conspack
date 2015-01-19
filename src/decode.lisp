@@ -254,12 +254,16 @@
 
 (defun decode (byte-vector &optional (offset 0))
   (with-fast-input (buffer byte-vector nil offset)
-    (values (tracking-refs () (decode-value buffer))
+    (values (with-properties ()
+              (tracking-refs ()
+                (decode-value buffer)))
             (fast-io:buffer-position buffer))))
 
 (defun decode-stream (stream &optional (offset 0))
   (with-fast-input (buffer nil stream offset)
-    (values (tracking-refs () (decode-value buffer))
+    (values (with-properties ()
+                (tracking-refs ()
+                  (decode-value buffer)))
             (fast-io:buffer-position buffer))))
 
 (defun decode-file (path)

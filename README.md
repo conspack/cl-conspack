@@ -1,3 +1,10 @@
+# News
+
+**Recent changes**:
+
+* Properties now require `WITH-PROPERTIES` if used outside an `ENCODE`
+  or `DECODE`, see below.
+
 # cl-conspack
 
 CONSPACK was inspired by MessagePack, and by the general lack of
@@ -197,6 +204,9 @@ nothing special is needed for decoding.
 
 ### Properties
 
+(Properties now require a `WITH-PROPERTIES` block in some
+circumstances, see below.)
+
 Properties are a way to specify additional information about an object
 that may be useful at decode-time.  For instance, while hash tables
 are supported as maps, there are no bits to specify the `:test`
@@ -208,9 +218,10 @@ You may specify arbitrary properties for arbitrary objects; the only
 restriction is the objects must test by `EQ`.
 
 ```lisp
-(let ((object (make-instance ...)))
-  (setf (property object :foo) 'bar)
-  (property object :foo)) ;; => BAR
+(conspack:with-properties ()
+  (let ((object (make-instance ...)))
+    (setf (property object :foo) 'bar)
+    (property object :foo))) ;; => BAR
 ```
 
 This sets the `:foo` property to the symbol `bar`, and it is encoded
@@ -226,8 +237,18 @@ When decoding, you can access properties about an object via
     ...))
 ```
 
-They are also available afterwards with `property`, and you may remove
-them with `remove-property` or `remove-properties`.
+You may remove them with `remove-property` or `remove-properties`.
+
+**Properties are now only available within a `WITH-PROPERTIES`
+block.** This has a number of benefits, including some thread safety,
+and ensuring properties don't stick around forever.
+
+`ENCODE` and `DECODE` have **implicit** `WITH-PROPERTIES` blocks: you
+don't need to specify `WITH-PROPERTIES` if you use properties inside
+`ENCODE-OBJECT`, `DECODE-OBJECT`, or encode and decode any objects
+that have implicit properties.  You only need this if you wish to
+access properties *outside* of the encode or decode (e.g.,
+preassigning properties to be encoded).
 
 ### Allocation Limits and Security
 

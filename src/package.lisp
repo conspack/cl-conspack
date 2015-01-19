@@ -17,7 +17,7 @@
            #:pointer #:pointer-value
 
            #:property #:properties #:remove-property
-           #:remove-properties
+           #:remove-properties #:with-properties
 
            #:encode-object #:decode-object
            #:slots-to-alist #:alist-to-slots

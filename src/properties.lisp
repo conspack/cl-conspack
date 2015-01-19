@@ -1,9 +1,14 @@
 (in-package :conspack)
 
-(defvar *properties* (tg:make-weak-hash-table :weakness :key)
+(defvar *properties* nil
   "Object => PLIST association for Properties.  Setting a property and
 encoding will encode that property.  Decoded properties will be
 included here as well.")
+
+(defmacro with-properties (nil &body body)
+  `(let ((*properties* (or *properties*
+                           (tg:make-weak-hash-table :weakness :key))))
+     ,@body))
 
 (defun property (object tag &optional default)
   (getf (gethash object *properties*) tag default))
@@ -19,4 +24,3 @@ included here as well.")
 
 (defun properties (object)
   (gethash object *properties*))
-
