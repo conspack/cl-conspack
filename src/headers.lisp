@@ -4,7 +4,7 @@
 
 (defconstant +boolean-header+      #b00000000) ; #b0000000n
 (defconstant +number-header+       #b00010000) ; #b0001nnnn
-(defconstant +container-header     #b00100000) ; #b001xxfnn
+(defconstant +container-header+    #b00100000) ; #b001xxfnn
 (defconstant +string-header+       #b01000000) ; #b010000nn
 (defconstant +ref-header+          #b01100000) ; #b011fdddd
 (defconstant +r-ref-header+        #b01100100) ; #b01100100
