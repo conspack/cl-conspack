@@ -32,13 +32,16 @@
 
  ;; Utility
 
+(declaim (ftype (function (fixnum &optional fixnum) null)
+                use-bytes precheck-bytes))
+(declaim (inline use-bytes))
 (defun use-bytes (n &optional (times 1))
-  (unless *conspack-max-bytes* (return-from use-bytes))
-  (incf *bytes-alloc* (* n times))
-  (when (> *bytes-alloc* *conspack-max-bytes*)
-    (error 'max-size-exceeded
-           :value *bytes-alloc*
-           :reason "Size restricted.")))
+  (when *conspack-max-bytes*
+    (incf *bytes-alloc* (* n times))
+    (when (> *bytes-alloc* *conspack-max-bytes*)
+      (error 'max-size-exceeded
+             :value *bytes-alloc*
+             :reason "Size restricted."))))
 
 (defun precheck-bytes (n &optional (times 1))
   (unless *conspack-max-bytes* (return-from precheck-bytes))
@@ -48,6 +51,7 @@
            :value (+ (* n times) *bytes-alloc*)
            :reason "Size restricted.")))
 
+(declaim (ftype (function (fixnum (or null (unsigned-byte 8))) null) container-precheck-bytes))
 (defun container-precheck-bytes (len fixed-header)
   (when *conspack-max-bytes*
     (use-bytes +platform-bytes+)

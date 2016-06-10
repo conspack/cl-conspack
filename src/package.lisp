@@ -7,7 +7,7 @@
            #:invalid-index #:unhandled-remote-reference
            #:invalid-tmap-type
 
-           #:encode #:encode-to-buffer
+           #:encode #:encode-to-buffer #:encode-to-file
            #:r-ref #:make-r-ref #:with-remote-refs
            #:tracking-refs #:clear-refs #:make-ref-context
            #:with-index #:with-named-index

@@ -229,6 +229,11 @@
       (notice-recursively value))
     (encode-ref-or-value value fast-io-buffer)))
 
+(defun encode-to-file (value filename)
+  (with-open-file (stream filename :direction :output :if-exists :supersede
+                                   :element-type '(unsigned-byte 8))
+    (encode value :stream stream)))
+
 (defun encode (value &key stream)
   (with-fast-output (buffer stream)
     (encode-to-buffer value buffer)))

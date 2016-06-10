@@ -23,4 +23,5 @@ included here as well.")
   (remhash object *properties*))
 
 (defun properties (object)
-  (gethash object *properties*))
+  (unless (trivial-p object)
+    (gethash object *properties*)))
