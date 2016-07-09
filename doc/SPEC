@@ -33,8 +33,12 @@ Specification
 -------------
 
 Boolean:    #b0000000n; n = 0 or 1, nil or t
+                        (count = 2)
+
+Reserved:   #b00000010 - #b00001111 (count = 14)
 
 Number:     #b0001nnnn; nnnn = type
+                        (count = 16)
             bytes;      numeric value per type, for nnnn = #x0..#xB
 
             or
@@ -71,6 +75,7 @@ Number:     #b0001nnnn; nnnn = type
             some point.
 
 Container:  #b001xxfnn;       xx = type, f = static-type-flag, nn = size-bytes
+                              (count = 32)
             size-bytes size;  number of elements in container, or
                               number of key-value pairs in a map/tmap
            [type byte;        when f=1, element-type for arrays, or
@@ -150,6 +155,7 @@ Container:  #b001xxfnn;       xx = type, f = static-type-flag, nn = size-bytes
             probably be optimized to packed-bit vectors.
 
 String      #b010000nn;        nn = size-bytes
+                               (count = 4)
             size-bytes bytes;  length of string in bytes
             length bytes;      UTF-8 string
 
@@ -157,6 +163,7 @@ String      #b010000nn;        nn = size-bytes
             the number of characters.
 
 Ref:        #b011fdddd;          f = inline-flag, dddd = id or size-bytes
+                                 (count = 32)
            [size-bytes bytes;  if f=0, value of index]
 
             f:    #b0: id follows
@@ -181,7 +188,7 @@ Ref:        #b011fdddd;          f = inline-flag, dddd = id or size-bytes
             encoded first, so they can be tagged as written (see
             Tags).
 
-R-Ref:      #b01100100
+R-Ref:      #b01100100 (count = 1)
             Obj;
 
             Remote reference.  This represents a placeholder that is
@@ -197,6 +204,7 @@ R-Ref:      #b01100100
 Reserved:   #b01100101 .. #b01100111, count = 3
 
 Pointer:    #b011010nn         nn = size-bytes
+                               (count = 4)
             size-bytes PTR;
 
             Pointer value; this is more-or-less intended for
@@ -206,23 +214,7 @@ Pointer:    #b011010nn         nn = size-bytes
 
 Reserved:   #b01101100 .. #b01101111, count = 4
 
-Tag:        #b111fdddd;        f = inline-flag, dddd = id or size-bytes
-           [size-bytes bytes;  if f=0, value of index]
-
-            f:    #b0: id follows
-                  #b1: id is lower nibble
-
-            dddd: #b00nn: size-bytes per container if f = 0
-
-                  otherwise, 4-bit reference ID.
-
-            Note: Tags are written at any point before an object.
-            They may not be written where objects are shortened,
-            such as static containers.  The parser should track
-            the given ID as being associated with the following
-            object.  It is an error to assign the same tag twice.
-
-Cons:       #b10000000
+Cons:       #b10000000  (count = 1)
             Obj;        CAR of cons
             Obj;        CDR of cons
 
@@ -230,23 +222,26 @@ Cons:       #b10000000
             decoding should be identical.  This is likely inefficient,
             however.
 
-Package:    #b10000001
+Package:    #b10000001  (count = 1)
             Obj;        String or reference to package name
 
             Note: Forward references are invalid here.
 
 Symbol:     #b1000001f; f = keyword flag
+                        (count = 2)
             Obj;        String or ref which is symbol-name
            [Obj;        Package or reference to package, if f = 0]
 
             Note: Forward references are invalid here.
 
 Character:  #b100001nn;            nn = byte-count (i.e., 1-4)
+                                   (count = 4)
             byte-count bytes;      the character value, UTF-8
 
             Represent a character encoded in UTF-8.
 
-Properties: #b10001000 list; A list object specifying properties
+Properties: #b10001000     (count = 1)
+            list;          A list object specifying properties
             Obj;           The object for which these properties apply
 
             The first object shall be a list object or backward
@@ -288,12 +283,28 @@ Properties: #b10001000 list; A list object specifying properties
             invalid.
 
 
-Reserved    #b10001001 - #b10001111, count = 7
+Reserved    #b10001001 - #b10011111, count = 23
 
 Index:      #b101fdddd;        f = inline-flag, dddd = id or size-bytes
+                               (count = 32)
            [size-bytes bytes;  if f=0, value of index]
 
             Indexes are essentially enumerations which can be mapped
             to a symbol or keyword.
 
-Reserved    #b10100100 - #b10101111, count = 12
+Tag:        #b111fdddd;        f = inline-flag, dddd = id or size-bytes
+                               (count = 32)
+           [size-bytes bytes;  if f=0, value of index]
+
+            f:    #b0: id follows
+                  #b1: id is lower nibble
+
+            dddd: #b00nn: size-bytes per container if f = 0
+
+                  otherwise, 4-bit reference ID.
+
+            Note: Tags are written at any point before an object.
+            They may not be written where objects are shortened,
+            such as static containers.  The parser should track
+            the given ID as being associated with the following
+            object.  It is an error to assign the same tag twice.
