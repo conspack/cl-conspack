@@ -180,8 +180,8 @@ For instance, you may define multiple indexes for multiple different
 format versions, read the version, and use the appropriate index:
 
 ```lisp
-(define-index 'version-1 ...)
-(define-index 'version-2 ...)
+(define-index version-1 ...)
+(define-index version-2 ...)
 
 (let ((version (decode-stream s)))
   (with-named-index version
