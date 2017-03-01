@@ -198,7 +198,7 @@
                     (make-symbol symbol-name))))
           (make-symbol symbol-name)))))
 
-(defmacro with-interning (nil &body body)
+(defmacro with-interning (&body body)
   `(let ((*intern-symbols* t)) ,@body))
 
 (defun decode-character (header buffer)
