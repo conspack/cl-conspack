@@ -13,10 +13,12 @@ of the given `CLASS`.  Methods should specialize on `CLASS (EQL symbol)`."))
 (defmacro slots-to-alist ((instance) &body slot-names)
   "Produce an `ALIST` of slot-names-to-slot-values, suitable for
 `ENCODE-OBJECT`."
-  (alexandria:once-only (instance)
-    `(list
-      ,@(loop for slot-name in slot-names
-              collect `(cons ',slot-name (slot-value ,instance ',slot-name))))))
+  (if slot-names
+    (alexandria:once-only (instance)
+      `(list
+         ,@(loop for slot-name in slot-names
+                 collect `(cons ',slot-name (slot-value ,instance ',slot-name)))))
+    nil))
 
 (defmacro alist-to-slots ((alist &key instance class) &body slot-names)
   "Set slots via `(SETF (SLOT-VALUE ...))` based on the values of the
@@ -33,15 +35,16 @@ You may not use both `:INSTANCE` and `:CLASS`."
     (error "Please specify only one of `INSTANCE` or `CLASS`."))
   (unless (or instance class)
     (error "You must specify one of `INSTANCE` or `CLASS`."))
-  (alexandria:once-only (alist)
-    (alexandria:with-gensyms (object)
-      `(let ((,object ,(cond (class `(make-instance ',class))
-                               (instance instance))))
-         (prog1 ,object
-           (setf
-            ,@(loop for slot-name in slot-names
-                    collect `(slot-value ,object ',slot-name)
-                    collect `(aval ',slot-name ,alist))))))))
+  (alexandria:with-gensyms (object alist%)
+    `(let ((,object ,(cond (class `(make-instance ',class))
+                           (instance instance)))
+           (,alist% ,alist))
+       (declare (ignorable ,alist%))
+       (prog1 ,object
+         (setf
+           ,@(loop for slot-name in slot-names
+                   collect `(slot-value ,object ',slot-name)
+                   collect `(aval ',slot-name ,alist%)))))))
 
 (defmacro defencoding (class-name &body slot-names)
   "Trivially define `ENCODE-OBJECT` and `DECODE-OBJECT` to store and
