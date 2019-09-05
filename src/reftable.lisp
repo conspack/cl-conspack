@@ -45,7 +45,9 @@
        (setf (gethash object ref) (gethash forward-ref ref))
        (remhash forward-ref ref))
       (:map-value
-       (setf (gethash datum ref) object)))))
+       (setf (gethash datum ref) object))
+      (:tmap-value
+       (setf (slot-value ref datum) object)))))
 
 (defun replace-forward-refs (id object &optional (context *ref-context*))
   (loop for forward-ref in (gethash id (ref-context-forward-refs context))
