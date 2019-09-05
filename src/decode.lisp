@@ -103,7 +103,8 @@
   (let* ((len (or len (decode-size (size-bytes header) buffer)))
          (fixed-header (when (container-fixed-p header)
                          (fast-read-byte buffer)))
-         (class (decode-value buffer)))
+         (class (decode-value buffer))
+         (forward-refs nil))
     (container-precheck-bytes (* 2 len) fixed-header)
     (unless (symbolp class)
       (error 'invalid-tmap-type :value class :reason "Not a symbol"))
@@ -111,10 +112,15 @@
           collect
           (let ((cons (cons nil nil)))
             (setf (car cons) (decode-value-or-fref buffer :car cons fixed-header))
-            (setf (cdr cons) (decode-value-or-fref buffer :cdr cons nil))
+            (setf (cdr cons) (decode-value-or-fref buffer :tmap-value nil (car cons)))
+            (when (forward-ref-p (cdr cons))
+              (push (cdr cons) forward-refs))
             cons) into alist
           finally
-             (return (decode-object class alist)))))
+             (let ((object (decode-object class alist)))
+               (loop for forward-ref in forward-refs
+                     do (setf (forward-ref-ref forward-ref) object))
+               (return object)))))
 
 (defun decode-container (header buffer &optional len)
   (let ((type (decode-container-type header)))
