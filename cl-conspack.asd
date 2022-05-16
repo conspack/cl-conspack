@@ -25,6 +25,7 @@
    (:file "headers")
    (:file "indexes")
    (:file "tmap")
+   (:file "array")
    (:file "encode")
    (:file "decode")
    (:file "explain")))

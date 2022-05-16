@@ -19,7 +19,7 @@
            #:property #:properties #:remove-property
            #:remove-properties #:with-properties
 
-           #:encode-object #:decode-object
+           #:encode-object #:decode-object #:object-class-identifier
            #:slots-to-alist #:alist-to-slots
            #:defencoding
 

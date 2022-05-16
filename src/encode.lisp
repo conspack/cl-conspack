@@ -115,7 +115,7 @@
                             (encode-object value)))
          (len (length encoded-alist)))
     (encode-header (container-header :tmap nil) buffer fixed-header len)
-    (encode-ref-or-value (class-name (class-of value)) buffer)
+    (encode-ref-or-value (object-class-identifier value) buffer)
     (loop for i in encoded-alist do
           (encode-ref-or-value (car i) buffer)
           (encode-ref-or-value (cdr i) buffer))))
