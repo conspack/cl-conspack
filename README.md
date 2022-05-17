@@ -85,21 +85,17 @@ The easiest way, for the common case:
 ```
 
 This expands to the more flexible way, which specializes
-`ENCODE-OBJECT`, `DECODE-OBJECT-ALLOCATE`, and `DECODE-OBJECT-INITIALIZE`:
+`ENCODE-OBJECT` and `DECODE-OBJECT-INITIALIZE`:
 
 ```lisp
-(defmethod conspack:encode-object ((object my-class) &key &allow-other-keys)
+(defmethod conspack:encode-object append
+    ((object my-class) &key &allow-other-keys)
   (conspack:slots-to-alist (object)
     slot-1 slot-2 slot-3 ...))
 
-(defmethod conspack:decode-object-allocate ((class (eql 'my-class)) alist
-                                            &key &allow-other-keys)
-  (declare (ignore alist))
-  (allocate-instance (find-class 'my-class)))
-
-(defmethod conspack:decode-object-initialize ((class (eql 'my-class))
-                                              object alist
-                                              &key &allow-other-keys)
+(defmethod conspack:decode-object-initialize progn
+    ((object my-class) class alist &key &allow-other-keys)
+  (declare (ignore class))
   (alist-to-slots (alist object)
     slot-1 slot-2 slot-3))
 ```

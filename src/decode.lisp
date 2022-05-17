@@ -293,7 +293,7 @@
                                   :tmap obj (list* pairs class incomplete))
                                  nil))
                         (t
-                         (decode-object-initialize class obj pairs)
+                         (decode-object-initialize obj class pairs)
                          (values obj t))))))))
 
 (defun try-tmap-completion (incomplete)
@@ -317,7 +317,7 @@
            (setf (incomplete-data incomplete) (list* pairs class new-data))
            (values incomplete nil))
           (t
-           (decode-object-initialize class obj pairs)
+           (decode-object-initialize obj class pairs)
            (values obj t)))))
 
 (defun decode-container (header buffer &optional len)

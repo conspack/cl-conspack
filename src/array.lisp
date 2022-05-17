@@ -9,7 +9,7 @@
   ;; implementation-specific; we don't need any of them.
   'array)
 
-(defmethod encode-object ((object array) &key &allow-other-keys)
+(defmethod encode-object append ((object array) &key &allow-other-keys)
   (let ((aet (array-element-type object)))
     `((:dimensions . ,(array-dimensions object))
       (:element-type . ,aet)
@@ -25,8 +25,9 @@
          (caet (cdr (assoc :element-type alist))))
     (make-array cdimensions :element-type caet)))
 
-(defmethod decode-object-initialize ((class (eql 'array)) array alist
-                                     &key &allow-other-keys)
+(defmethod decode-object-initialize progn ((array array) class alist
+                                           &key &allow-other-keys)
+  (declare (ignore class))
   (let ((ccontent (cdr (assoc :content alist))))
     (loop for i below (length ccontent)
           do (setf (row-major-aref array i) (aref ccontent i)))

@@ -4,7 +4,10 @@
   (:documentation "Return an alist for `OBJECT` which will be used for
 key-value pairs for a Typed Map (tmap).  The class of `OBJECT` will
 be encoded along with these and used by the decoder to recreate
-the object."))
+the object.")
+  ;; To support inheritance, the results of multiple applicable methods
+  ;; are appended together to form the final alist.
+  (:method-combination append))
 
 (defgeneric object-class-identifier (object &key &allow-other-keys)
   (:documentation "Return a value for `OBJECT` which will be used as
@@ -20,13 +23,20 @@ based on the values in the `ALIST`. Note that any values in the TMap
 that are or contain forward references may not appear in the alist,
 and containers may be uninitialized. The alist will only be complete
 when passed to `DECODE-OBJECT-INITIALIZE`.
-Methods should specialize on `CLASS (EQL symbol)`."))
+Methods should specialize on `CLASS (EQL symbol)`.")
+  (:method (class alist &key &allow-other-keys)
+    (declare (ignore alist))
+    ;; Assume it's a standard class.
+    (allocate-instance (find-class class))))
 
-(defgeneric decode-object-initialize (class object alist &key &allow-other-keys)
-  (:documentation "Initialize an empty object of the given `CLASS`
-based on the values in the `ALIST`. Methods should specialize on
-`CLASS (EQL symbol)`."))
-  
+(defgeneric decode-object-initialize (object class alist &key &allow-other-keys)
+  (:documentation "Initialize an empty OBJECT of the given `CLASS`
+based on the values in the `ALIST`. Methods should specialize on `OBJECT`,
+but can use the `CLASS` if they wish. Return value is ignored.")
+  ;; Method combo in place to make it easier to initialize subclasses.
+  ;; Methods need only initialize their particular slots (or whatever),
+  ;; and can rely on the superclass initializations having completed.
+  (:method-combination progn :most-specific-last))
 
 (defmacro slots-to-alist ((instance) &body slot-names)
   "Produce an `ALIST` of slot-names-to-slot-values, suitable for
@@ -55,18 +65,14 @@ Slots are set on the provided `INSTANCE`."
                     collect `(aval ',slot-name ,alist%))))))))
 
 (defmacro defencoding (class-name &body slot-names)
-  "Trivially define `ENCODE-OBJECT`. `DECODE-OBJECT-ALLOCATE`, and
-`DECODE-OBJECT-INITIALIZE` to store and load the given slots."
+  "Trivially define `ENCODE-OBJECT` and `DECODE-OBJECT-INITIALIZE`
+to store and load the given slots."
   `(eval-when (:load-toplevel :execute)
-     (defmethod encode-object ((object ,class-name) &key &allow-other-keys)
+     (defmethod encode-object append
+         ((object ,class-name) &key &allow-other-keys)
        (slots-to-alist (object) ,@slot-names))
-     (defmethod decode-object-allocate ((class (eql ',class-name)) alist
-                                        &key &allow-other-keys)
-       (declare (ignore alist))
-       (allocate-instance (find-class ',class-name)))
-     (defmethod decode-object-initialize ((class (eql ',class-name))
-                                          object alist
-                                          &key &allow-other-keys)
+     (defmethod decode-object-initialize progn
+         ((object ,class-name) class alist &key &allow-other-keys)
+       (declare (ignore class))
        (alist-to-slots (alist object)
          ,@slot-names))))
-
