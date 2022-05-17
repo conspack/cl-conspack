@@ -31,10 +31,13 @@ based on the values in the `ALIST`. Methods should specialize on
 (defmacro slots-to-alist ((instance) &body slot-names)
   "Produce an `ALIST` of slot-names-to-slot-values, suitable for
 `ENCODE-OBJECT`."
-  (alexandria:once-only (instance)
-    `(list
-      ,@(loop for slot-name in slot-names
-              collect `(cons ',slot-name (slot-value ,instance ',slot-name))))))
+  (if slot-names
+      (alexandria:once-only (instance)
+        `(list
+          ,@(loop for slot-name in slot-names
+                  collect `(cons ',slot-name
+                                 (slot-value ,instance ',slot-name)))))
+      ()))
 
 (defmacro alist-to-slots ((alist instance) &body slot-names)
   "Set slots via `(SETF (SLOT-VALUE ...))` based on the values of the
@@ -42,13 +45,14 @@ slots specified.
 
 Slots are set on the provided `INSTANCE`."
   (alexandria:once-only (alist)
-    (alexandria:with-gensyms (object)
-      `(let ((,object ,instance))
+    (alexandria:with-gensyms (object alist%)
+      `(let ((,object ,instance) (,alist% ,alist))
+         (declare (ignorable ,alist%)) ; if no slots
          (prog1 ,object
            (setf
             ,@(loop for slot-name in slot-names
                     collect `(slot-value ,object ',slot-name)
-                    collect `(aval ',slot-name ,alist))))))))
+                    collect `(aval ',slot-name ,alist%))))))))
 
 (defmacro defencoding (class-name &body slot-names)
   "Trivially define `ENCODE-OBJECT`. `DECODE-OBJECT-ALLOCATE`, and
