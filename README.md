@@ -2,6 +2,7 @@
 
 **Recent changes**:
 
+* Decoder now handles more uses of circular reference.
 * Properties now require `WITH-PROPERTIES` if used outside an `ENCODE`
   or `DECODE`, see below.
 
@@ -84,16 +85,22 @@ The easiest way, for the common case:
 ```
 
 This expands to the more flexible way, which specializes
-`ENCODE-OBJECT` and `DECODE-OBJECT`:
+`ENCODE-OBJECT`, `DECODE-OBJECT-ALLOCATE`, and `DECODE-OBJECT-INITIALIZE`:
 
 ```lisp
 (defmethod conspack:encode-object ((object my-class) &key &allow-other-keys)
   (conspack:slots-to-alist (object)
     slot-1 slot-2 slot-3 ...))
 
-(defmethod conspack:decode-object ((class (eql 'my-class)) alist
-                                   &key &allow-other-keys)
-  (alist-to-slots (alist :class my-class)
+(defmethod conspack:decode-object-allocate ((class (eql 'my-class)) alist
+                                            &key &allow-other-keys)
+  (declare (ignore alist))
+  (allocate-instance (find-class 'my-class)))
+
+(defmethod conspack:decode-object-initialize ((class (eql 'my-class))
+                                              object alist
+                                              &key &allow-other-keys)
+  (alist-to-slots (alist object)
     slot-1 slot-2 slot-3))
 ```
 
@@ -101,8 +108,12 @@ This expands to the more flexible way, which specializes
 The alist returned will be checked for circularity of `tracking-refs`
 is in use.
 
-`DECODE-OBJECT` should specialize on `(eql 'class-name)`, and produce
-an object *based* on the alist.
+`DECODE-OBJECT-ALLOCATE` should specialize on `(eql 'class-name)`, and
+produce an object *based* on the class and alist.
+
+`DECODE-OBJECT-INITIALIZE` should specialize on the object (which has
+been produced by `DECODE-OBJECT-ALLOCATE`), and initializes it.
+This two step process is necessary to handle circularity correctly.
 
 As you can see, this does not require objects be in any particular
 format, or that you store any particular slots or values.  It does not
@@ -232,7 +243,7 @@ When decoding, you can access properties about an object via
 `*current-properties*`:
 
 ```lisp
-(defmethod decode-object (...)
+(defmethod decode-object-initialize (...)
   (let ((prop (getf *current-properties* NAME)))
     ...))
 ```

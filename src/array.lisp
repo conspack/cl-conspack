@@ -19,11 +19,15 @@
                                :element-type aet
                                :displaced-to object)))))
 
-(defmethod decode-object ((class (eql 'array)) alist &key &allow-other-keys)
+(defmethod decode-object-allocate ((class (eql 'array)) alist
+                                   &key &allow-other-keys)
   (let* ((cdimensions (cdr (assoc :dimensions alist)))
-         (caet (cdr (assoc :element-type alist)))
-         (ccontent (cdr (assoc :content alist)))
-         (array (make-array cdimensions :element-type caet)))
+         (caet (cdr (assoc :element-type alist))))
+    (make-array cdimensions :element-type caet)))
+
+(defmethod decode-object-initialize ((class (eql 'array)) array alist
+                                     &key &allow-other-keys)
+  (let ((ccontent (cdr (assoc :content alist))))
     (loop for i below (length ccontent)
           do (setf (row-major-aref array i) (aref ccontent i)))
     array))

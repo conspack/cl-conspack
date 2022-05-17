@@ -19,7 +19,8 @@
            #:property #:properties #:remove-property
            #:remove-properties #:with-properties
 
-           #:encode-object #:decode-object #:object-class-identifier
+           #:encode-object #:decode-object-allocate #:decode-object-initialize
+           #:object-class-identifier
            #:slots-to-alist #:alist-to-slots
            #:defencoding
 

@@ -3,20 +3,30 @@
 (defgeneric encode-object (object &key &allow-other-keys)
   (:documentation "Return an alist for `OBJECT` which will be used for
 key-value pairs for a Typed Map (tmap).  The class of `OBJECT` will
-be encoded along with these and used by `DECODE-OBJECT` to recreate
+be encoded along with these and used by the decoder to recreate
 the object."))
 
 (defgeneric object-class-identifier (object &key &allow-other-keys)
   (:documentation "Return a value for `OBJECT` which will be used as
 the class for a Typed Map (tmap). This object will be encoded along
 with the key-value pairs returned by `ENCODE-OBJECT` and used by
-`DECODE-OBJECT` to recreate the object.")
+the decoder to recreate the object.")
   (:method (object &key &allow-other-keys)
     (class-name (class-of object))))
 
-(defgeneric decode-object (class alist &key &allow-other-keys)
-  (:documentation "Take the values in `ALIST` and recreate the object
-of the given `CLASS`.  Methods should specialize on `CLASS (EQL symbol)`."))
+(defgeneric decode-object-allocate (class alist &key &allow-other-keys)
+  (:documentation "Create an empty object of the given `CLASS`
+based on the values in the `ALIST`. Note that any values in the TMap
+that are or contain forward references may not appear in the alist,
+and containers may be uninitialized. The alist will only be complete
+when passed to `DECODE-OBJECT-INITIALIZE`.
+Methods should specialize on `CLASS (EQL symbol)`."))
+
+(defgeneric decode-object-initialize (class object alist &key &allow-other-keys)
+  (:documentation "Initialize an empty object of the given `CLASS`
+based on the values in the `ALIST`. Methods should specialize on
+`CLASS (EQL symbol)`."))
+  
 
 (defmacro slots-to-alist ((instance) &body slot-names)
   "Produce an `ALIST` of slot-names-to-slot-values, suitable for
@@ -26,25 +36,14 @@ of the given `CLASS`.  Methods should specialize on `CLASS (EQL symbol)`."))
       ,@(loop for slot-name in slot-names
               collect `(cons ',slot-name (slot-value ,instance ',slot-name))))))
 
-(defmacro alist-to-slots ((alist &key instance class) &body slot-names)
+(defmacro alist-to-slots ((alist instance) &body slot-names)
   "Set slots via `(SETF (SLOT-VALUE ...))` based on the values of the
 slots specified.
 
-If `INSTANCE` is specified, slots are set on the provided value.
-
-If `CLASS` is specified, trivially create an instance
-via `(MAKE-INSTANCE 'CLASS)`, quoted.  If you need more complex
-initialization, specify `:INSTANCE` with your own `MAKE-INSTANCE`.
-
-You may not use both `:INSTANCE` and `:CLASS`."
-  (when (and instance class)
-    (error "Please specify only one of `INSTANCE` or `CLASS`."))
-  (unless (or instance class)
-    (error "You must specify one of `INSTANCE` or `CLASS`."))
+Slots are set on the provided `INSTANCE`."
   (alexandria:once-only (alist)
     (alexandria:with-gensyms (object)
-      `(let ((,object ,(cond (class `(make-instance ',class))
-                               (instance instance))))
+      `(let ((,object ,instance))
          (prog1 ,object
            (setf
             ,@(loop for slot-name in slot-names
@@ -52,13 +51,18 @@ You may not use both `:INSTANCE` and `:CLASS`."
                     collect `(aval ',slot-name ,alist))))))))
 
 (defmacro defencoding (class-name &body slot-names)
-  "Trivially define `ENCODE-OBJECT` and `DECODE-OBJECT` to store and
-load the given slots."
+  "Trivially define `ENCODE-OBJECT`. `DECODE-OBJECT-ALLOCATE`, and
+`DECODE-OBJECT-INITIALIZE` to store and load the given slots."
   `(eval-when (:load-toplevel :execute)
      (defmethod encode-object ((object ,class-name) &key &allow-other-keys)
        (slots-to-alist (object) ,@slot-names))
-     (defmethod decode-object ((class (eql ',class-name)) alist
-                               &key &allow-other-keys)
-       (alist-to-slots (alist :class ,class-name)
+     (defmethod decode-object-allocate ((class (eql ',class-name)) alist
+                                        &key &allow-other-keys)
+       (declare (ignore alist))
+       (allocate-instance (find-class ',class-name)))
+     (defmethod decode-object-initialize ((class (eql ',class-name))
+                                          object alist
+                                          &key &allow-other-keys)
+       (alist-to-slots (alist object)
          ,@slot-names))))
 
