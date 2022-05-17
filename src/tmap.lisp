@@ -43,10 +43,14 @@ but can use the `CLASS` if they wish. Return value is ignored.")
 `ENCODE-OBJECT`."
   (if slot-names
       (alexandria:once-only (instance)
-        `(list
-          ,@(loop for slot-name in slot-names
-                  collect `(cons ',slot-name
-                                 (slot-value ,instance ',slot-name)))))
+        (alexandria:with-gensyms (alist)
+          `(let ((,alist nil))
+             ,@(loop for slot-name in slot-names
+                     collect `(when (slot-boundp ,instance ',slot-name)
+                                (push (cons ',slot-name
+                                            (slot-value ,instance ',slot-name))
+                                      ,alist)))
+             ,alist)))
       ()))
 
 (defmacro alist-to-slots ((alist instance) &body slot-names)
@@ -55,14 +59,15 @@ slots specified.
 
 Slots are set on the provided `INSTANCE`."
   (alexandria:once-only (alist)
-    (alexandria:with-gensyms (object alist%)
+    (alexandria:with-gensyms (object alist% pair)
       `(let ((,object ,instance) (,alist% ,alist))
          (declare (ignorable ,alist%)) ; if no slots
          (prog1 ,object
-           (setf
-            ,@(loop for slot-name in slot-names
-                    collect `(slot-value ,object ',slot-name)
-                    collect `(aval ',slot-name ,alist%))))))))
+           ,@(loop for slot-name in slot-names
+                   collect `(let ((,pair (assoc ',slot-name ,alist%)))
+                              (when ,pair
+                                (setf (slot-value ,object ',slot-name)
+                                      (cdr ,pair))))))))))
 
 (defmacro defencoding (class-name &body slot-names)
   "Trivially define `ENCODE-OBJECT` and `DECODE-OBJECT-INITIALIZE`

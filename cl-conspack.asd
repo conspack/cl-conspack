@@ -16,7 +16,6 @@
 
   :components
   ((:file "package")
-   (:file "util")
    (:file "types")
    (:file "properties")
    (:file "secure")
