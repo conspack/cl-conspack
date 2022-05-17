@@ -16,9 +16,14 @@
        'end-of-file)))
 
 (defun explain-container (buffer header)
-  (let ((item)
-        (size (decode-size (size-bytes header) buffer)))
-    (push (decode-container-type header) item)
+  (let* ((item)
+         (size (decode-size (size-bytes header) buffer))
+         (container-type (decode-container-type header))
+         (nobjects (ecase container-type
+                     ((:vector :list) size)
+                     ((:map) (* 2 size))
+                     ((:tmap) (1+ (* 2 size)))))) ; 1+ for class
+    (push container-type item)
     (push size item)
     (if (container-fixed-p header)
         (progn
@@ -27,9 +32,9 @@
             (if (eq :number (decode-header fixed-header))
                 (push (decode-number-header fixed-header) item)
                 (push (decode-header fixed-header) item))
-            (push (explain-buffer buffer size fixed-header)
+            (push (explain-buffer buffer nobjects fixed-header)
                   item)))
-        (push (explain-buffer buffer size) item))
+        (push (explain-buffer buffer nobjects) item))
     item))
 
 (defun explain-buffer (buffer &optional n fixed-header)
