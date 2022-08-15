@@ -63,6 +63,8 @@ up to `N` objects, or until end-of-file, if `N` is `nil`."
                   (push (car (explain-buffer buffer 1)) item))
                  ((ref-p header)
                   (push (decode-ref-id header buffer) item))
+                 ((remote-ref-p header)
+                  (push (car (explain-buffer buffer 1)) item))
                  ((index-p header)
                   (push (decode-ref-id header buffer) item))
                  ((cons-p header)
