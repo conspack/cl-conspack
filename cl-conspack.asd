@@ -14,6 +14,8 @@
   :pathname "src"
   :serial t
 
+  :in-order-to ((test-op (test-op "cl-conspack-test")))
+
   :components
   ((:file "package")
    (:file "types")
