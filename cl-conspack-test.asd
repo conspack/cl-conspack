@@ -1,21 +1,15 @@
-(cl:eval-when (:load-toplevel :execute)
-  (asdf:load-system :fiveam)
-  (asdf:load-system :checkl))
-
 (defsystem :cl-conspack-test
   :description "Tests for cl-conspack"
 
-  :depends-on (:cl-conspack :checkl)
+  :depends-on (:cl-conspack :fiveam)
 
   :pathname "t"
   :serial t
 
+  :perform (test-op (o s)
+             (uiop:symbol-call :fiveam :run!
+                               (find-symbol "CONSPACK" "CONSPACK.TEST")))
+
   :components
   ((:file "package")
-
-   (checkl:tests "encode-decode")
-   (checkl:test-values "test-values"
-                       :package :conspack.test)))
-
-(checkl:define-test-op :cl-conspack :cl-conspack-test)
-(checkl:define-test-op :cl-conspack-test)
+   (:file "encode-decode")))

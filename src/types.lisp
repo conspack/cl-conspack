@@ -34,6 +34,10 @@
 (define-condition invalid-symbol-package (conspack-error) ())
 
 (define-condition invalid-index (conspack-error) ())
+(define-condition vacuous-ref (conspack-error) ())
+(define-condition vacuous-properties (conspack-error) ())
+(define-condition forward-referenced-properties (conspack-error) ())
+(define-condition toplevel-forward-ref (conspack-error) ())
 
 (define-condition unhandled-remote-reference (conspack-error) ())
 

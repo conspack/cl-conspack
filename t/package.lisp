@@ -1,2 +1,2 @@
 (defpackage :conspack.test
-  (:use #:cl #:checkl #:conspack))
+  (:use #:cl #:conspack))

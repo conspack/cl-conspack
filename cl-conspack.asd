@@ -14,9 +14,10 @@
   :pathname "src"
   :serial t
 
+  :in-order-to ((test-op (test-op "cl-conspack-test")))
+
   :components
   ((:file "package")
-   (:file "util")
    (:file "types")
    (:file "properties")
    (:file "secure")
@@ -25,6 +26,7 @@
    (:file "headers")
    (:file "indexes")
    (:file "tmap")
+   (:file "array")
    (:file "encode")
    (:file "decode")
    (:file "explain")))
