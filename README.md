@@ -26,10 +26,10 @@ features among prominent serial/wire formats:
 
 It should be noted that, significantly, **none** of these support
 references.  Of course, references can be implemented at a higher
-layer (e.g., JSPON), but this requires implemeting an entire
+layer (e.g., JSPON), but this requires implementing an entire
 additional layer of abstraction and escaping, including rewalking the
 parsed object hierarchy and looking for specific signatures, which can
-be error-prone, and hurt performance.
+be error-prone and hurts performance.
 
 Additionally, none of these appear to have much in the way of
 security, and communicating with an untrusted peer is probably not
@@ -51,7 +51,7 @@ CONSPACK, on the other hand, attempts to be a more robust solution:
 * Security, including byte-counting for (estimated) maximum output
   size, and the elimination of circular data structures.
 
-* Speed, using [fast-io](https://github.com/rpav/fast-io), encoding
+* Speed. Using [fast-io](https://github.com/rpav/fast-io) encoding
   and decoding can be many times faster than alternatives, even
   *while* tracking references (faster still without!).
 
@@ -101,7 +101,7 @@ This expands to the more flexible way, which specializes
 ```
 
 `ENCODE-OBJECT` should specialize on the object and return an alist.
-The alist returned will be checked for circularity of `tracking-refs`
+The alist returned will be checked for circularity if `tracking-refs`
 is in use.
 
 `DECODE-OBJECT-ALLOCATE` should specialize on `(eql 'class-name)`, and
