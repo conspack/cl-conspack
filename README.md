@@ -289,6 +289,25 @@ with an error.
 
 Further options may be added in the future.
 
+### Interning
+
+By default, Conspack does not intern symbols, on the assumption that
+the producer and consumer have agreed on what symbols to use
+beforehand. If the decoder finds a symbol that has not already been
+interned, it will ignore the symbol's package and make an uninterned
+symbol instead.
+
+The `with-interning` macro can be used if the decoder should instead
+intern symbols:
+
+```lisp
+(with-interning ()
+  (decode ...))
+```
+
+Interning symbols from untrusted data could lead to denial-of-service
+attacks via interning long-lived symbols in memory, so be careful.
+
 ## Explaining
 
 Since conspack is a binary format, it's rather difficult for humans to
